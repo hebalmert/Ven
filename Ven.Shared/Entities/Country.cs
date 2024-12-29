@@ -10,6 +10,4 @@ public class Country
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = null!;
-
-    public bool Active { get; set; }
 }
