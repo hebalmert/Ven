@@ -14,6 +14,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(x =>
     x.UseSqlServer("name=DefaultConnection", options => options.MigrationsAssembly("Ven.Backend")));
 
+//Inicio de Area de los Serviciios
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", builder =>
+    {
+        builder.WithOrigins("https://localhost:7197") // dominio de tu aplicación Blazor
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .WithExposedHeaders(new string[] { "Totalpages", "Counting" });
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,6 +37,9 @@ if (app.Environment.IsDevelopment())
     var swaggerUrl = "https://localhost:7202/swagger"; // URL de Swagger
     Task.Run(() => OpenBrowser(swaggerUrl));
 }
+
+//Llamar el Servicio de CORS
+app.UseCors("AllowSpecificOrigin");
 
 app.UseHttpsRedirection();
 
