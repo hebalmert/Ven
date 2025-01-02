@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Ven.AccessData.Data;
+using Ven.Backend.Helpers;
 using Ven.Shared.Entities;
+using Ven.Shared.Pagination;
 
 namespace Ven.Backend.Controllers;
 
@@ -18,9 +20,12 @@ public class CountriesController : ControllerBase
 
     // GET: api/Countries
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Country>>> GetCountries()
+    public async Task<ActionResult<IEnumerable<Country>>> GetCountries([FromQuery] PaginationDTO pagination)
     {
-        return await _context.Countries.ToListAsync();
+        var queryable = _context.Countries.AsQueryable();
+
+        await HttpContext.InsertParameterPagination(queryable, pagination.RecordsNumber);
+        return await queryable.OrderBy(x => x.Name).Paginate(pagination).ToListAsync();
     }
 
     // GET: api/Countries/5
@@ -75,7 +80,8 @@ public class CountriesController : ControllerBase
         _context.Countries.Add(country);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetCountry", new { id = country.CountryId }, country);
+        //return CreatedAtAction("GetCountry", new { id = country.CountryId }, country);
+        return BadRequest("Error de prueba");
     }
 
     // DELETE: api/Countries/5
