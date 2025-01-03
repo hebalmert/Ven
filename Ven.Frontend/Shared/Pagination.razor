@@ -1,80 +1,92 @@
-﻿<nav>
-    <ul class="pagination justify-content-center">
-
-        @foreach (var item in Enlaces)
+﻿﻿<nav>
+    <ul class="pagination">
+        @foreach (var link in Links)
         {
-            <li class="page-item @(item.Habilitada ? null : "disabled") @(item.Activa ? "active" : null)"
-                @onclick=@(() => PaginaSeleccionadaInterno(item)) style="cursor:pointer">
-                <a class="page-link" tabindex="-1" aria-disabled="true">@item.Texto</a>
+            <li @onclick=@(() => InternalSelectedPage(link)) style="cursor: pointer" class="page-item @(link.Enable ? null : "disabled") @(link.Enable ? "active" : null)">
+                <a class="page-link">@link.Text</a>
             </li>
         }
     </ul>
 </nav>
 
 @code {
-    [Parameter] public int PaginaActual { get; set; } = 1;
-    [Parameter] public int PaginasTotales { get; set; }
-    [Parameter] public int Radio { get; set; } = 4;    //Cantidad de Cuadros de paginas que se muestran en el componente  anterios 1 2 3 4 siguiente
-    [Parameter] public EventCallback<int> PaginasSeleccionada { get; set; }
-    List<PaginaModel> Enlaces = new List<PaginaModel>();
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public int Radio { get; set; } = 4;
+    [Parameter] public EventCallback<int> SelectedPage { get; set; }
+    List<PageModel> Links = new();
 
-    private async Task PaginaSeleccionadaInterno(PaginaModel paginaModel)
+    private async Task InternalSelectedPage(PageModel pageModel)
     {
-        if (paginaModel.Pagina == PaginaActual)
+        if (pageModel.Page == CurrentPage || pageModel.Page == 0)
         {
             return;
         }
-        if (!paginaModel.Habilitada)
-        {
-            return;
-        }
-        await PaginasSeleccionada.InvokeAsync(paginaModel.Pagina);
+
+        await SelectedPage.InvokeAsync(pageModel.Page);
     }
 
     protected override void OnParametersSet()
     {
-        Enlaces = new List<PaginaModel>();
+        Links = new List<PageModel>();
+        var previousLinkEnable = CurrentPage != 1;
+        var previousLinkPage = CurrentPage - 1;
 
-        var enlaceAnteriorHabilitada = PaginaActual != 1;
-        var enlaceAnteriorPagina = PaginaActual - 1;
-        Enlaces.Add(new PaginaModel
+        Links.Add(new PageModel
             {
-                Texto = "Anterior",
-                Pagina = enlaceAnteriorPagina,
-                Habilitada = enlaceAnteriorHabilitada
+                Text = "Anterior",
+                Page = previousLinkPage,
+                Enable = previousLinkEnable
             });
 
-        for (int i = 1; i <= PaginasTotales; i++)
+        for (int i = 1; i <= TotalPages; i++)
         {
-            if (i >= PaginaActual - Radio && i <= PaginaActual + Radio)
+            if (TotalPages <= Radio)
             {
-                Enlaces.Add(new PaginaModel
+                Links.Add(new PageModel
                     {
-                        Texto = i.ToString(),
-                        Pagina = i,
-                        Activa = PaginaActual == i
+                        Page = i,
+                        Enable = CurrentPage == i,
+                        Text = $"{i}"
+                    });
+            }
+
+            if (TotalPages > Radio && i <= Radio && CurrentPage <= Radio)
+            {
+                Links.Add(new PageModel
+                    {
+                        Page = i,
+                        Enable = CurrentPage == i,
+                        Text = $"{i}"
+                    });
+            }
+
+            if (CurrentPage > Radio && i > CurrentPage - Radio && i <= CurrentPage)
+            {
+                Links.Add(new PageModel
+                    {
+                        Page = i,
+                        Enable = CurrentPage == i,
+                        Text = $"{i}"
                     });
             }
         }
 
-        var enlaceSiguienteHabilitado = PaginaActual != PaginasTotales;
-        var enlaceSiguientePagina = PaginaActual + 1;
-        Enlaces.Add(new PaginaModel
+        var linkNextEnable = CurrentPage != TotalPages;
+        var linkNextPage = CurrentPage != TotalPages ? CurrentPage + 1 : CurrentPage;
+        Links.Add(new PageModel
             {
-                Texto = "Siguiente",
-                Pagina = enlaceSiguientePagina,
-                Habilitada = enlaceSiguienteHabilitado
+                Text = "Siguiente",
+                Page = linkNextPage,
+                Enable = linkNextEnable
             });
     }
 
-    class PaginaModel
+    class PageModel
     {
-        public string Texto { get; set; } = null!;
-
-        public int Pagina { get; set; }
-
-        public bool Habilitada { get; set; } = true;
-
-        public bool Activa { get; set; } = false;
+        public string Text { get; set; } = null!;
+        public int Page { get; set; }
+        public bool Enable { get; set; } = true;
+        public bool Active { get; set; } = false;
     }
 }
