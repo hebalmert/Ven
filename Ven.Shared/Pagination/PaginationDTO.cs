@@ -6,7 +6,7 @@ public class PaginationDTO
 
     public int Page { get; set; } = 1;
 
-    public int RecordsNumber { get; set; } = 2;  //Numero de registros que se muestran por paginacion
+    public int RecordsNumber { get; set; } = 5;  //Numero de registros que se muestran por paginacion
 
     public string? Filter { get; set; }
 

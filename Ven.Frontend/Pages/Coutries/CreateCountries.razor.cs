@@ -13,6 +13,8 @@ public partial class CreateCountries
 
     private Country country = new();
 
+    private FormCountry? FormCountry { get; set; }
+
     private async Task Create()
     {
         var responseHttp = await _repository.PostAsync("/api/countries", country);
@@ -22,12 +24,13 @@ public partial class CreateCountries
             await _sweetAlert.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
-
+        FormCountry!.FormPostedSuccessfully = true;
         _navigationManager.NavigateTo("/countries");
     }
 
     private void Return()
     {
+        FormCountry!.FormPostedSuccessfully = true;
         _navigationManager.NavigateTo("/countries");
     }
 }

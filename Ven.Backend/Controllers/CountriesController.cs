@@ -44,32 +44,30 @@ public class CountriesController : ControllerBase
 
     // PUT: api/Countries/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutCountry(int id, Country country)
+    [HttpPut]
+    public async Task<IActionResult> PutCountry(Country country)
     {
-        if (id != country.CountryId)
-        {
-            return BadRequest();
-        }
-
-        _context.Entry(country).State = EntityState.Modified;
-
         try
         {
+            _context.Countries.Update(country);
             await _context.SaveChangesAsync();
+            return Ok();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateException dbUpdateException)
         {
-            if (!CountryExists(id))
+            if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
             {
-                return NotFound();
+                return BadRequest("Ya existe un Registro con el mismo nombre.");
             }
             else
             {
-                throw;
+                return BadRequest(dbUpdateException.InnerException.Message);
             }
         }
-        return NoContent();
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     // POST: api/Countries
@@ -77,27 +75,59 @@ public class CountriesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Country>> PostCountry(Country country)
     {
-        _context.Countries.Add(country);
-        await _context.SaveChangesAsync();
-
-        //return CreatedAtAction("GetCountry", new { id = country.CountryId }, country);
-        return BadRequest("Error de prueba");
+        try
+        {
+            _context.Countries.Add(country);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetCountry", new { id = country.CountryId }, country);
+        }
+        catch (DbUpdateException dbUpdateException)
+        {
+            if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
+            {
+                return BadRequest("Ya existe un Registro con el mismo nombre.");
+            }
+            else
+            {
+                return BadRequest(dbUpdateException.InnerException.Message);
+            }
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     // DELETE: api/Countries/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCountry(int id)
     {
-        var country = await _context.Countries.FindAsync(id);
-        if (country == null)
+        try
         {
-            return NotFound();
+            var country = await _context.Countries.FindAsync(id);
+            if (country == null)
+            {
+                return NotFound();
+            }
+            _context.Countries.Remove(country);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
-
-        _context.Countries.Remove(country);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        catch (DbUpdateException dbUpdateException)
+        {
+            if (dbUpdateException.InnerException!.Message.Contains("REFERENCE"))
+            {
+                return BadRequest("Existen Registros Relacionados y no se puede Eliminar");
+            }
+            else
+            {
+                return BadRequest(dbUpdateException.InnerException.Message);
+            }
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     private bool CountryExists(int id)

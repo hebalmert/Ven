@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 //Conexion a la base de datos
 builder.Services.AddDbContext<DataContext>(x =>
     x.UseSqlServer("name=DefaultConnection", options => options.MigrationsAssembly("Ven.Backend")));
+builder.Services.AddTransient<SeedDb>();
 
 //Inicio de Area de los Serviciios
 builder.Services.AddCors(options =>
@@ -27,6 +28,19 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+SeedData(app);
+
+void SeedData(WebApplication app)
+{
+    IServiceScopeFactory? scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+
+    using (IServiceScope? scope = scopedFactory!.CreateScope())
+    {
+        SeedDb? service = scope.ServiceProvider.GetService<SeedDb>();
+        service!.SeedAsync().Wait();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

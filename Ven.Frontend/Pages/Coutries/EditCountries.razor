@@ -1,0 +1,16 @@
+﻿@page "/Countries/edit/{Id:int}"
+
+<h3>Editar Pais</h3>
+
+@if (Country is null)
+{
+    <Loading/>
+}
+else
+{ 
+    <FormCountry @ref="FormCountry" 
+        Country="Country" 
+        OnSubmit="Edit" 
+        ReturnAction="Return"/>
+}
+
